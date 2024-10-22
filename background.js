@@ -7,12 +7,6 @@ function getRandomQuote() {
   return stoicQuotes[randomIndex];
 }
 
-// Function to read the quote aloud using text-to-speech
-function readQuoteAloud(quote) {
-  const utterance = new SpeechSynthesisUtterance(quote);
-  speechSynthesis.speak(utterance);
-}
-
 // Set up an alarm to trigger every hour (default)
 chrome.alarms.create('stoicQuoteAlarm', {
   periodInMinutes: 60
@@ -42,16 +36,20 @@ chrome.alarms.onAlarm.addListener((alarm) => {
       ]
     });
 
-    // Read the quote aloud
-    readQuoteAloud(quote);
+    // Send a message to content scripts to handle TTS
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      chrome.tabs.sendMessage(tabs[0].id, { action: 'speakQuote', quote: quote });
+    });
   }
 });
 
-// Add context menu to show quotes on right-click
-chrome.contextMenus.create({
-  id: 'showQuote',
-  title: 'Show Stoic Quote',
-  contexts: ['page']
+// Create a context menu, ensuring no duplicates
+chrome.contextMenus.removeAll(() => {
+  chrome.contextMenus.create({
+    id: 'showQuote',
+    title: 'Show Stoic Quote',
+    contexts: ['page']
+  });
 });
 
 // Handle context menu clicks
@@ -64,8 +62,8 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
       args: [quote]
     });
 
-    // Read the quote aloud
-    readQuoteAloud(quote);
+    // Send a message to content script to read the quote aloud
+    chrome.tabs.sendMessage(tab.id, { action: 'speakQuote', quote: quote });
   }
 });
 
@@ -116,9 +114,8 @@ function showQuoteHistory() {
 // Listen for messages from other parts of the extension
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'reloadAlarms') {
-    // Reload alarms based on new frequency from the options page
     chrome.storage.sync.get(['frequency'], (result) => {
-      const frequency = result.frequency || 60; // Default to 60 minutes
+      const frequency = result.frequency || 60;
       chrome.alarms.clear('stoicQuoteAlarm');
       chrome.alarms.create('stoicQuoteAlarm', { periodInMinutes: frequency });
       sendResponse({ status: 'success' });
