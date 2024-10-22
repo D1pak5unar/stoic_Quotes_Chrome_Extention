@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Stoic Quotes Options</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .dark-mode {
+            background-color: #333;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <h1>Stoic Quotes Settings</h1>
+    <label for="frequency">Quote Frequency (in minutes): </label>
+    <input type="number" id="frequency" min="1" max="120" value="60">
+    <br><br>
+    <label for="darkMode">Enable Dark Mode: </label>
+    <input type="checkbox" id="darkMode">
+    <br><br>
+    <!-- Button with ID for external event handling to comply with Chrome's Content Security Policy -->
+    <button id="saveSettingsBtn">Save Settings</button>
+
+    <script src="options.js"></script>
+</body>
+</html>
